@@ -341,12 +341,16 @@ impl_runtime_apis! {
 	}
 
 	impl pow_primitives::PowApi<Block> for Runtime {
-		fn verify(pre_hash: &H256, seal: &pow_primitives::Seal) -> pow_primitives::Difficulty {
-			unimplemented!()
+		fn verify(pre_hash: &H256, seal: &pow_primitives::Seal) -> Option<pow_primitives::Difficulty> {
+			Some(1)
 		}
 
-		fn mine(pre_hash: &H256) -> pow_primitives::Seal {
-			unimplemented!()
+		fn mine(pre_hash: &H256) -> (pow_primitives::Difficulty, pow_primitives::Seal) {
+			#[cfg(feature = "std")] {
+				println!("Simulate mining, sleep for one second ...");
+				std::thread::sleep(std::time::Duration::new(1, 0));
+			}
+			(1, Vec::new())
 		}
 	}
 }

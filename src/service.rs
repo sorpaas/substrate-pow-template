@@ -2,10 +2,10 @@
 
 //! Service and ServiceFactory implementation. Specialized wrapper over substrate service.
 
-use std::sync::Arc;
+use std::sync::{Arc, Mutex};
 use std::time::Duration;
 use substrate_client::{self as client, LongestChain};
-use pow::{import_queue, PowImportQueue};
+use pow::{import_queue, start_mine, PowImportQueue};
 use futures::prelude::*;
 use node_template_runtime::{self, GenesisConfig, opaque::Block, RuntimeApi, WASM_BINARY};
 use substrate_service::{
@@ -18,6 +18,7 @@ use inherents::InherentDataProviders;
 use network::{config::DummyFinalityProofRequestBuilder, construct_simple_protocol};
 use substrate_executor::native_executor_instance;
 use substrate_service::{ServiceFactory, construct_service_factory, TelemetryOnConnect};
+use basic_authorship::ProposerFactory;
 pub use substrate_executor::NativeExecutor;
 
 // Our native executor instance.
@@ -77,7 +78,21 @@ construct_service_factory! {
 		},
 		AuthoritySetup = {
 			|mut service: Self::FullService| {
-				unimplemented!()
+				if service.config().roles.is_authority() {
+					let proposer = ProposerFactory {
+						client: service.client(),
+						transaction_pool: service.transaction_pool(),
+					};
+
+					start_mine(
+						Arc::new(Mutex::new(service.client())),
+						service.client(),
+						proposer,
+						service.config().custom.inherent_data_providers.clone(),
+					);
+				}
+
+				Ok(service)
 			}
 		},
 		LightService = LightComponents<Self>
