@@ -27,10 +27,8 @@ substrate-service = { path = "substrate/core/service" }
 inherents = { package = "substrate-inherents", path = "substrate/core/inherents" }
 transaction-pool = { package = "substrate-transaction-pool", path = "substrate/core/transaction-pool" }
 network = { package = "substrate-network", path = "substrate/core/network" }
-babe = { package = "substrate-consensus-babe", path = "substrate/core/consensus/babe" }
-babe-primitives = { package = "substrate-consensus-babe-primitives", path = "substrate/core/consensus/babe/primitives" }
-grandpa = { package = "substrate-finality-grandpa", path = "substrate/core/finality-grandpa" }
-grandpa-primitives = { package = "substrate-finality-grandpa-primitives", path = "substrate/core/finality-grandpa/primitives" }
+pow = { package = "substrate-consensus-pow", path = "substrate/core/consensus/pow" }
+pow-primitives = { package = "substrate-consensus-pow-primitives", path = "substrate/core/consensus/pow/primitives" }
 substrate-client = { path = "substrate/core/client" }
 basic-authorship = { package = "substrate-basic-authorship", path = "substrate/core/basic-authorship" }
 node-template-runtime = { path = "runtime" }

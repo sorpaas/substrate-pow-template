@@ -9,7 +9,7 @@
 include!(concat!(env!("OUT_DIR"), "/wasm_binary.rs"));
 
 use rstd::prelude::*;
-use primitives::OpaqueMetadata;
+use primitives::{H256, OpaqueMetadata};
 use sr_primitives::{
 	ApplyResult, transaction_validity::TransactionValidity, generic, create_runtime_str,
 	AnySignature
@@ -327,9 +327,26 @@ impl_runtime_apis! {
 		}
 	}
 
+
+	impl substrate_session::SessionKeys<Block> for Runtime {
+		fn generate_session_keys(seed: Option<Vec<u8>>) -> Vec<u8> {
+			Default::default()
+		}
+	}
+
 	impl offchain_primitives::OffchainWorkerApi<Block> for Runtime {
 		fn offchain_worker(number: NumberFor<Block>) {
 			Executive::offchain_worker(number)
+		}
+	}
+
+	impl pow_primitives::PowApi<Block> for Runtime {
+		fn verify(pre_hash: &H256, seal: &pow_primitives::Seal) -> pow_primitives::Difficulty {
+			unimplemented!()
+		}
+
+		fn mine(pre_hash: &H256) -> pow_primitives::Seal {
+			unimplemented!()
 		}
 	}
 }
