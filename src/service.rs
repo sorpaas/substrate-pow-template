@@ -85,9 +85,10 @@ construct_service_factory! {
 					};
 
 					start_mine(
-						Arc::new(Mutex::new(service.client())),
+						Box::new(service.client().clone()),
 						service.client(),
 						proposer,
+						500,
 						service.config().custom.inherent_data_providers.clone(),
 					);
 				}

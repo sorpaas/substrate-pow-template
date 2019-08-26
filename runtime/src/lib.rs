@@ -345,12 +345,12 @@ impl_runtime_apis! {
 			Some(1)
 		}
 
-		fn mine(pre_hash: &H256) -> (pow_primitives::Difficulty, pow_primitives::Seal) {
+		fn mine(pre_hash: &H256, _seed: &H256, _round: u32) -> Option<(pow_primitives::Difficulty, pow_primitives::Seal)> {
 			#[cfg(feature = "std")] {
 				println!("Simulate mining, sleep for one second ...");
 				std::thread::sleep(std::time::Duration::new(1, 0));
 			}
-			(1, Vec::new())
+			Some((1, Vec::new()))
 		}
 	}
 }
