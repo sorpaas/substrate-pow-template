@@ -88,6 +88,7 @@ construct_service_factory! {
 						Box::new(service.client().clone()),
 						service.client(),
 						proposer,
+						Vec::new(),
 						500,
 						service.config().custom.inherent_data_providers.clone(),
 					);
