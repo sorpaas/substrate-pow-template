@@ -23,6 +23,7 @@ sr-primitives = { path = "../substrate/core/sr-primitives", default_features = f
 client = { package = "substrate-client", path = "../substrate/core/client", default_features = false }
 offchain-primitives = { package = "substrate-offchain-primitives", path = "../substrate/core/offchain/primitives", default-features = false }
 pow-primitives = { package = "substrate-consensus-pow-primitives", path = "../substrate/core/consensus/pow/primitives", default-features = false }
+pow = { package = "srml-pow", path = "../substrate/srml/pow", default-features = false }
 substrate-session = { path = "../substrate/core/session", default-features = false }
 
 [build-dependencies]
@@ -49,6 +50,7 @@ std = [
 	"safe-mix/std",
 	"offchain-primitives/std",
 	"pow-primitives/std",
+	"pow/std",
 	"substrate-session/std",
 ]
 no_std = []

@@ -16,6 +16,8 @@ use sr_primitives::{
 };
 use sr_primitives::traits::{NumberFor, BlakeTwo256, Block as BlockT, StaticLookup, Verify, ConvertInto};
 use sr_primitives::weights::Weight;
+use pow_primitives::{Seal, Difficulty};
+use pow::diffs::average_span;
 use client::{
 	block_builder::api::{CheckInherentsResult, InherentData, self as block_builder_api},
 	runtime_api as client_api, impl_runtime_apis
@@ -133,6 +135,9 @@ parameter_types! {
 	pub const AvailableBlockRatio: Perbill = Perbill::from_percent(75);
 	pub const MaximumBlockLength: u32 = 5 * 1024 * 1024;
 	pub const Version: RuntimeVersion = VERSION;
+	pub const Span: BlockNumber = 10;
+	pub const TargetPeriod: u64 = 10;
+	pub const InitialDifficulty: Difficulty = 100;
 }
 
 impl system::Trait for Runtime {
@@ -231,6 +236,12 @@ impl sudo::Trait for Runtime {
 	type Proposal = Call;
 }
 
+impl average_span::Trait for Runtime {
+	type Span = Span;
+	type TargetPeriod = TargetPeriod;
+	type InitialDifficulty = InitialDifficulty;
+}
+
 /// Used for the module template in `./template.rs`
 impl template::Trait for Runtime {
 	type Event = Event;
@@ -247,6 +258,7 @@ construct_runtime!(
 		Indices: indices::{default, Config<T>},
 		Balances: balances,
 		Sudo: sudo,
+		AverageSpanDifficultyAdjustment: average_span::{Module, Call, Storage},
 		// Used for the module template in `./template.rs`
 		TemplateModule: template::{Module, Call, Storage, Event<T>},
 	}
@@ -341,16 +353,16 @@ impl_runtime_apis! {
 	}
 
 	impl pow_primitives::PowApi<Block> for Runtime {
-		fn verify(pre_hash: &H256, seal: &pow_primitives::Seal) -> Option<pow_primitives::Difficulty> {
-			Some(1)
+		fn difficulty() -> Difficulty {
+			<average_span::Module<Runtime>>::target_difficulty()
 		}
 
-		fn mine(pre_hash: &H256, _seed: &H256, _round: u32) -> Option<(pow_primitives::Difficulty, pow_primitives::Seal)> {
-			#[cfg(feature = "std")] {
-				println!("Simulate mining, sleep for one second ...");
-				std::thread::sleep(std::time::Duration::new(1, 0));
-			}
-			Some((1, Vec::new()))
+		fn verify(pre_hash: &H256, seal: &Seal, difficulty: Difficulty) -> bool {
+			pow::algos::blake2_256::verify(pre_hash, seal, difficulty, 10)
+		}
+
+		fn mine(pre_hash: &H256, seed: &H256, difficulty: Difficulty, round: u32) -> Option<Seal> {
+			pow::algos::blake2_256::mine(pre_hash, seed, difficulty, round, 10)
 		}
 	}
 }
