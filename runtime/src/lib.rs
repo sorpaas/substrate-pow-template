@@ -138,6 +138,7 @@ parameter_types! {
 	pub const Span: BlockNumber = 10;
 	pub const TargetPeriod: u64 = 10;
 	pub const InitialDifficulty: Difficulty = 100;
+	pub const UncleGenerations: BlockNumber = 0;
 }
 
 impl system::Trait for Runtime {
@@ -242,6 +243,13 @@ impl average_span::Trait for Runtime {
 	type InitialDifficulty = InitialDifficulty;
 }
 
+impl authorship::Trait for Runtime {
+	type FindAuthor = pow::FindAuthor<Self::AccountId>;
+	type UncleGenerations = UncleGenerations;
+	type FilterUncle = ();
+	type EventHandler = ();
+}
+
 /// Used for the module template in `./template.rs`
 impl template::Trait for Runtime {
 	type Event = Event;
@@ -259,6 +267,7 @@ construct_runtime!(
 		Balances: balances,
 		Sudo: sudo,
 		AverageSpanDifficultyAdjustment: average_span::{Module, Call, Storage},
+		Authorship: authorship::{Module, Call, Storage},
 		// Used for the module template in `./template.rs`
 		TemplateModule: template::{Module, Call, Storage, Event<T>},
 	}
