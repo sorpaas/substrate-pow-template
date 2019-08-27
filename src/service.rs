@@ -5,9 +5,9 @@
 use std::sync::{Arc, Mutex};
 use std::time::Duration;
 use substrate_client::{self as client, LongestChain};
-use pow::{import_queue, start_mine, PowImportQueue};
+use pow::{import_queue, start_mine, PowRuntimeAlgorithm, PowImportQueue};
 use futures::prelude::*;
-use node_template_runtime::{self, GenesisConfig, opaque::Block, RuntimeApi, WASM_BINARY};
+use node_template_runtime::{self, AccountId, GenesisConfig, opaque::Block, RuntimeApi, WASM_BINARY};
 use substrate_service::{
 	FactoryFullConfiguration, LightComponents, FullComponents, FullBackend,
 	FullClient, LightClient, LightBackend, FullExecutor, LightExecutor,
@@ -19,6 +19,7 @@ use network::{config::DummyFinalityProofRequestBuilder, construct_simple_protoco
 use substrate_executor::native_executor_instance;
 use substrate_service::{ServiceFactory, construct_service_factory, TelemetryOnConnect};
 use basic_authorship::ProposerFactory;
+use codec::Encode;
 pub use substrate_executor::NativeExecutor;
 
 // Our native executor instance.
@@ -87,8 +88,9 @@ construct_service_factory! {
 					start_mine(
 						Box::new(service.client().clone()),
 						service.client(),
+						PowRuntimeAlgorithm::new(service.client()),
 						proposer,
-						Vec::new(),
+						crate::chain_spec::get_from_seed::<AccountId>("Alice").encode(),
 						500,
 						service.config().custom.inherent_data_providers.clone(),
 					);
@@ -108,7 +110,8 @@ construct_service_factory! {
 			| {
 				import_queue(
 					Box::new(client.clone()),
-					client,
+					client.clone(),
+					PowRuntimeAlgorithm::new(client.clone()),
 					config.custom.inherent_data_providers.clone(),
 				).map_err(Into::into)
 			}
@@ -118,7 +121,8 @@ construct_service_factory! {
 				let fprb = Box::new(DummyFinalityProofRequestBuilder::default()) as Box<_>;
 				import_queue(
 					Box::new(client.clone()),
-					client,
+					client.clone(),
+					PowRuntimeAlgorithm::new(client.clone()),
 					config.custom.inherent_data_providers.clone(),
 				).map(|q| (q, fprb)).map_err(Into::into)
 			}},
