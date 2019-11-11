@@ -32,7 +32,6 @@ construct_simple_protocol! {
 /// be able to perform chain operations.
 macro_rules! new_full_start {
 	($config:expr) => {{
-		let mut import_setup = None;
 		let inherent_data_providers = inherents::InherentDataProviders::new();
 
 		let builder = substrate_service::ServiceBuilder::new_full::<
@@ -44,31 +43,20 @@ macro_rules! new_full_start {
 			.with_transaction_pool(|config, client|
 				Ok(transaction_pool::txpool::Pool::new(config, transaction_pool::FullChainApi::new(client)))
 			)?
-			.with_import_queue(|_config, client, mut select_chain, transaction_pool| {
-				let select_chain = select_chain.take()
-					.ok_or_else(|| substrate_service::Error::SelectChainRequired)?;
-
-				let (grandpa_block_import, grandpa_link) =
-					grandpa::block_import::<_, _, _, runtime::RuntimeApi, _>(
-						client.clone(), &*client, select_chain
-					)?;
-
-				let import_queue = aura::import_queue::<_, _, AuraPair, _>(
-					aura::SlotDuration::get_or_compute(&*client)?,
-					Box::new(grandpa_block_import.clone()),
-					Some(Box::new(grandpa_block_import.clone())),
-					None,
-					client,
+			.with_import_queue(|_config, client, select_chain, _transaction_pool| {
+				let import_queue = consensus_pow::import_queue(
+					Box::new(client.clone()),
+					client.clone(),
+					crate::pow::Sha3Algorithm,
+					0,
+					select_chain,
 					inherent_data_providers.clone(),
-					Some(transaction_pool),
 				)?;
-
-				import_setup = Some((grandpa_block_import, grandpa_link));
 
 				Ok(import_queue)
 			})?;
 
-		(builder, import_setup, inherent_data_providers)
+		(builder, inherent_data_providers)
 	}}
 }
 
@@ -86,11 +74,7 @@ pub fn new_full<C: Send + Default + 'static>(config: Configuration<C, GenesisCon
 	// never actively participate in any consensus process.
 	let participates_in_consensus = is_authority && !config.sentry_mode;
 
-	let (builder, mut import_setup, inherent_data_providers) = new_full_start!(config);
-
-	let (block_import, grandpa_link) =
-		import_setup.take()
-			.expect("Link Half and Block Import are present for Full Services or setup failed before. qed");
+	let (builder, inherent_data_providers) = new_full_start!(config);
 
 	let service = builder.with_network_protocol(|_| Ok(NodeProtocol::new()))?
 		.with_finality_proof_provider(|_client, _backend| {
