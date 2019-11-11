@@ -35,6 +35,11 @@ substrate-client = { git = "https://github.com/paritytech/substrate" }
 basic-authorship = { package = "substrate-basic-authorship", git = "https://github.com/paritytech/substrate" }
 runtime = { package = "node-template-runtime", path = "runtime" }
 sr-primitives = { git = "https://github.com/paritytech/substrate" }
+consensus-pow = { package = "substrate-consensus-pow", git = "https://github.com/paritytech/substrate" }
+consensus-pow-primitives = { package = "substrate-consensus-pow-primitives", git = "https://github.com/paritytech/substrate" }
+sha3 = "0.8"
+rand = { version = "0.7", features = ["small_rng"] }
+primitive-types = "0.6"
 
 [build-dependencies]
 vergen = "3.0.4"
